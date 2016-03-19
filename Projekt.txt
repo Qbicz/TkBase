@@ -1,0 +1,13 @@
+Aplikacja standalone
+
+Wersja minimalna projektu (13 punktów) - nawi¹zanie po³¹czenia z baz¹ danych + mo¿liwoœæ dodawania, edycji, usuwania rekordów w poszczególnych tabelach (zgodnie z tematem projektu).
+Dodatkowo:
+
+    funkcjonalnoœæ z³o¿onego wyszukiwania rekordów - 2 punkt
+    tryb zarejestrowanego u¿ytkownika (domyœlnie: zak³adamy wy³¹cznie przegl¹danie rekordów w tabeli; zarejestrowany u¿ytkownik po zalogowaniu ma mieæ dostêp do dodatkowych opcji - zwi¹zanych z jego profilem) - 2 punkt
+    tryb administratora (zarz¹dzanie poszczególnymi kategoriami po zalogowaniu siê z uprawnieniami administratora) - 2 punkt
+    estetyka projektu - 2 punkt
+    u¿ycie bardziej zaawansowanych technologii (np. raportowanie, wykresy) - 3 punkt
+    walidacja - 2 punkt
+
+Termin realizacji: 31 marca 2016 r.
