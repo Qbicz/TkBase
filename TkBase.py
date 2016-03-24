@@ -7,6 +7,22 @@ root = Tk()
 cnames = StringVar()
 
 # Functions
+def newRecord(*args):
+    print('New record: ')
+    # child window
+    child = Toplevel(c, height=40, width=300, takefocus=True)
+    child.wm_title("Add new record")
+    e = Entry(child)
+    e.grid(column=1, row=1, sticky=W)
+    e.focus_set()
+    
+    # Show column default text
+    selection = tablebox.curselection()
+    value = tablebox.get(selection[0])
+    print('selection: %s' % value)
+    cursor.execute('SELECT TOP 0 * FROM ?', value)
+    
+    
 
 def showRowsFromTable(*args):
     print('showRowsFromTable()')
@@ -40,7 +56,6 @@ def showRowsFromTable(*args):
     
     cnames.set(dbRows)
     return dbRows
-
 
 # Connect to the SqlLocalDb
 con = pyodbc.connect('Driver={SQL Server Native Client 11.0};Server=(localdb)\\MyInstance;Database=fkubicz;integrated security = true')
@@ -154,6 +169,7 @@ searchLabel = ttk.Label(c, text='Wyszukaj w tablicy')
 searchbar = ttk.Entry(c, textvariable = searchText)
 searchText.set("np. Gibson")
 b = ttk.Button(c, text="Szukaj", width=10, command=getSearchText)
+newButton = ttk.Button(c, text="Dodaj nowy", command=newRecord, default='active')
 
 # Grid all the widgets
 tablelabel.grid(column=0,row=0,pady=5)
@@ -164,11 +180,13 @@ lbl.grid(column=2, row=0, padx=10, pady=5)
 g1.grid(column=2, row=1, sticky=W, padx=20)
 g2.grid(column=2, row=2, sticky=W, padx=20)
 g3.grid(column=2, row=3, sticky=W, padx=20)
-send.grid(column=3, row=4, sticky=E)
+send.grid(column=2, row=4, sticky=(W,E))
 sentlbl.grid(column=2, row=5, columnspan=2, sticky=N, pady=5, padx=5)
 status.grid(column=1, row=6, columnspan=2, sticky=(W,E))
 searchLabel.grid(column=3, row=0, sticky=(N,S,E,W))
 searchbar.grid(column=3, row=1, sticky=W)
+newButton.grid(column=3, row=4, padx=5, pady=5)
+
 b.grid(column=4, row=1, sticky=W)
 c.grid_columnconfigure(0, weight=1)
 c.grid_rowconfigure(5, weight=1)
