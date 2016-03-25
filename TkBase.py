@@ -5,22 +5,39 @@ root = Tk()
 
 # State Variables
 cnames = StringVar()
+newEntry = StringVar()
 
 # Functions
 def newRecord(*args):
     print('New record: ')
     # child window
-    child = Toplevel(c, height=40, width=300, takefocus=True)
+    child = Toplevel(c, takefocus=True)
     child.wm_title("Add new record")
-    e = Entry(child)
+    e = Entry(child, textvariable = newEntry, width=60)
+    ok = ttk.Button(child, text = 'OK', command=writeRecord, default='active')
+    
     e.grid(column=1, row=1, sticky=W)
+    ok.grid(column=2, row=1, sticky=W)
     e.focus_set()
     
     # Show column default text
     selection = tablebox.curselection()
     value = tablebox.get(selection[0])
-    print('selection: %s' % value)
-    cursor.execute('SELECT TOP 0 * FROM ?', value)
+    print('selection:%r' % value)
+    # parametrizing doesn't work -> build string in python
+    cursor.execute('SELECT * FROM %s WHERE ID = 1' % value)
+    exampleString = cursor.fetchone()
+    newEntry.set(exampleString)
+    print("%r" % exampleString)
+    
+    # TODO: enable saving the string to list again
+    
+    
+def writeRecord(*args):
+    print('writeRecord')
+    
+    # add newEntry to the database, to selected table
+    
     
     
 
@@ -36,7 +53,7 @@ def showRowsFromTable(*args):
         print('selection: ', selection, ': ', value)
     
     if value == 'Magazyny':
-        cursor.execute('SELECT magID, miasto, adres FROM Magazyny')
+        cursor.execute('SELECT ID, miasto, adres FROM Magazyny')
         while 1:
             row = cursor.fetchone()
             if not row:
@@ -45,7 +62,7 @@ def showRowsFromTable(*args):
             dbRows.append(row.miasto + ', ' + row.adres)
         
     elif value == 'Gitary':
-        cursor.execute('SELECT producent, model, data FROM Gitary')
+        cursor.execute('SELECT ID, producent, model, data FROM Gitary')
         while 1:
             row = cursor.fetchone()
             if not row:
