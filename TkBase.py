@@ -10,7 +10,6 @@ newEntry = StringVar()
 # Functions
 def getSelectedTable():
     selection = tablebox.curselection()
-    print('\n\nselection:', selection)
     return tablebox.get(selection[0])
     
     
@@ -74,7 +73,12 @@ def writeNewRecord():
         INSERT INTO Magazyny (miasto, adres, kraj, telefon)
                 VALUES(%r, %r, %r, %r) """ % (newTuple)
                 
-    elif table == 'Gitary':
+    elif gTable == 'Gitary':
+        Query = """
+        INSERT INTO Gitary (producent, model, data, cena)
+                VALUES(%r, %r, %r, %r) """ % (newTuple)
+    
+    elif gTable == 'emp': # add Inventory table
         pass
         
     else:
