@@ -72,7 +72,7 @@ def writeNewRecord():
     
         Query = """
         INSERT INTO Magazyny (miasto, adres, kraj, telefon)
-                VALUES(%r %r %r %r) """ % (newTuple)
+                VALUES(%r, %r, %r, %r) """ % (newTuple)
                 
     elif table == 'Gitary':
         pass
@@ -132,6 +132,8 @@ if __name__ == "__main__":
 
 # Connect to the SqlLocalDb
 con = pyodbc.connect('Driver={SQL Server Native Client 11.0};Server=(localdb)\\MyInstance;Database=fkubicz;integrated security = true')
+# commit transactions after each query
+con.autocommit = True
 
 # Get a Cursor
 cursor = con.cursor()
