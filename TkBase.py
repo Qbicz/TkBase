@@ -10,7 +10,13 @@ newEntry = StringVar()
 # Functions
 def getSelectedTable():
     selection = tablebox.curselection()
+    print('\n\nselection:', selection)
     return tablebox.get(selection[0])
+    
+    
+def updateSelectedTable():
+    global gTable
+    gTable = getSelectedTable()
     
     
 def removeFirstTupleElem(originalTuple):
@@ -31,13 +37,12 @@ def newRecord(*args):
     ok.grid(column=2, row=1, sticky=W)
     e.focus_set()
     
-    # Show tables' columns default text
-    table = getSelectedTable()
-    print('selected table:%r' % table)
+    # Show tables' columns example text
+    print('selected table:%r' % gTable)
     # parametrizing doesn't work -> build string in python
-    cursor.execute('SELECT * FROM %s WHERE ID = 1' % table)
+    cursor.execute('SELECT * FROM %s WHERE ID = 1' % gTable)
     tupleString = cursor.fetchone()
-    exampleString = ' ; '.join(str(x) for x in tupleString) # in case of ints in a tuple
+    exampleString = ' ; '.join(s for s in tupleString if isinstance(s, str)) # delete ID which is int
     
     # save to state variable
     newEntry.set(exampleString)
@@ -46,45 +51,57 @@ def newRecord(*args):
     # TODO: enable saving the new tuple to string again
     
     
-def writeNewRecord(*args):
+def writeNewRecord():
+    # we can't use get selection 
     print('writeRecord')
     
     print("newEntry: %r" % newEntry.get())
     # build a tuple from a modified state variable string
-    myTuple = newEntry.get().split(' ; ')
-    print(myTuple)
-    
-    # add newEntry to the database, to selected table
-    table = getSelectedTable()
+    newTuple = newEntry.get().split(' ; ')
+    print(newTuple)
     
     # TODO: use dictionary as switch instead of if-else chain
     # http://code.activestate.com/recipes/181064/
     
     # delete ID, the first element of a tuple
-    newTuple = removeFirstTupleElem(myTuple)
+    # better - remove ID before ''.join in newRecord
     
-    if table == 'Magazyny':
+    #newTuple = removeFirstTupleElem(myTuple)
+    
+    # add newEntry to the database, to selected table
+    if gTable == 'Magazyny':
     
         Query = """
         INSERT INTO Magazyny (miasto, adres, kraj, telefon)
                 VALUES(%r %r %r %r) """ % (newTuple)
+                
+    elif table == 'Gitary':
+        pass
         
-        print(Query)
+    else:
+        print('TODO: Raise an exception here?')
+    
+    print(Query)
+    cursor.execute(Query)
     
     
 
 def showRowsFromTable(*args):
     print('showRowsFromTable()')
     dbRows = [] # istnieje tylko wewnatrz funkcji
+    updateSelectedTable()
     
-    # optional args
+    
+    # optional args - leave it here as an example of event.widget
+    """
     for event in args:
         widget = event.widget
         selection = widget.curselection()
         value = widget.get(selection[0])
         print('selection: ', selection, ': ', value)
+    """
     
-    if value == 'Magazyny':
+    if gTable == 'Magazyny':
         cursor.execute('SELECT ID, miasto, adres FROM Magazyny')
         while 1:
             row = cursor.fetchone()
@@ -93,7 +110,7 @@ def showRowsFromTable(*args):
             # construct a list for showing in Tk Listbox
             dbRows.append(row.miasto + ', ' + row.adres)
         
-    elif value == 'Gitary':
+    elif gTable== 'Gitary':
         cursor.execute('SELECT ID, producent, model, data FROM Gitary')
         while 1:
             row = cursor.fetchone()
@@ -105,6 +122,14 @@ def showRowsFromTable(*args):
     
     cnames.set(dbRows)
     return dbRows
+
+"""
+MAIN
+- maybe refactor later to
+
+if __name__ == "__main__":
+    main()
+"""    
 
 # Connect to the SqlLocalDb
 con = pyodbc.connect('Driver={SQL Server Native Client 11.0};Server=(localdb)\\MyInstance;Database=fkubicz;integrated security = true')
@@ -260,6 +285,9 @@ sentmsg.set('')
 statusmsg.set('')
 lbox.selection_set(0)
 tablebox.selection_set(0)
+# global var gTable
+gTable = getSelectedTable()
+
 #searchbar.insert('1.0', 'np. Gibson')
 
 # on event
