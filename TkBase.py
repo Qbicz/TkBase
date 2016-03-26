@@ -37,12 +37,12 @@ def newRecord(*args):
     ok.grid(column=2, row=1, sticky=W)
     e.focus_set()
     
-    # Show tables' columns example text
+    # Show tables' columns default text
     print('selected table:%r' % gTable)
     # parametrizing doesn't work -> build string in python
     cursor.execute('SELECT * FROM %s WHERE ID = 1' % gTable)
     tupleString = cursor.fetchone()
-    exampleString = ' ; '.join(s for s in tupleString if isinstance(s, str)) # delete ID which is int
+    exampleString = ' ; '.join(str(x) for x in tupleString) # in case of ints in a tuple
     
     # save to state variable
     newEntry.set(exampleString)
@@ -57,16 +57,15 @@ def writeNewRecord():
     
     print("newEntry: %r" % newEntry.get())
     # build a tuple from a modified state variable string
-    newTuple = newEntry.get().split(' ; ')
-    print(newTuple)
+    myTuple = newEntry.get().split(' ; ')
+    print(myTuple)
     
     # TODO: use dictionary as switch instead of if-else chain
     # http://code.activestate.com/recipes/181064/
     
     # delete ID, the first element of a tuple
     # better - remove ID before ''.join in newRecord
-    
-    #newTuple = removeFirstTupleElem(myTuple)
+    newTuple = removeFirstTupleElem(myTuple)
     
     # add newEntry to the database, to selected table
     if gTable == 'Magazyny':
