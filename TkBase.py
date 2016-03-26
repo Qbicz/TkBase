@@ -8,36 +8,68 @@ cnames = StringVar()
 newEntry = StringVar()
 
 # Functions
+def getSelectedTable():
+    selection = tablebox.curselection()
+    return tablebox.get(selection[0])
+    
+    
+def removeFirstTupleElem(originalTuple):
+    newList = list(originalTuple)
+    del newList[0]
+    return tuple(newList)
+    
+
 def newRecord(*args):
     print('New record: ')
     # child window
     child = Toplevel(c, takefocus=True)
     child.wm_title("Add new record")
     e = Entry(child, textvariable = newEntry, width=60)
-    ok = ttk.Button(child, text = 'OK', command=writeRecord, default='active')
+    ok = ttk.Button(child, text = 'OK', command=writeNewRecord, default='active')
     
     e.grid(column=1, row=1, sticky=W)
     ok.grid(column=2, row=1, sticky=W)
     e.focus_set()
     
-    # Show column default text
-    selection = tablebox.curselection()
-    value = tablebox.get(selection[0])
-    print('selection:%r' % value)
+    # Show tables' columns default text
+    table = getSelectedTable()
+    print('selected table:%r' % table)
     # parametrizing doesn't work -> build string in python
-    cursor.execute('SELECT * FROM %s WHERE ID = 1' % value)
-    exampleString = cursor.fetchone()
+    cursor.execute('SELECT * FROM %s WHERE ID = 1' % table)
+    tupleString = cursor.fetchone()
+    exampleString = ' ; '.join(str(x) for x in tupleString) # in case of ints in a tuple
+    
+    # save to state variable
     newEntry.set(exampleString)
     print("%r" % exampleString)
     
-    # TODO: enable saving the string to list again
+    # TODO: enable saving the new tuple to string again
     
     
-def writeRecord(*args):
+def writeNewRecord(*args):
     print('writeRecord')
     
-    # add newEntry to the database, to selected table
+    print("newEntry: %r" % newEntry.get())
+    # build a tuple from a modified state variable string
+    myTuple = newEntry.get().split(' ; ')
+    print(myTuple)
     
+    # add newEntry to the database, to selected table
+    table = getSelectedTable()
+    
+    # TODO: use dictionary as switch instead of if-else chain
+    # http://code.activestate.com/recipes/181064/
+    
+    # delete ID, the first element of a tuple
+    newTuple = removeFirstTupleElem(myTuple)
+    
+    if table == 'Magazyny':
+    
+        Query = """
+        INSERT INTO Magazyny (miasto, adres, kraj, telefon)
+                VALUES(%r %r %r %r) """ % (newTuple)
+        
+        print(Query)
     
     
 
