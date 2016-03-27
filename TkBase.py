@@ -6,6 +6,7 @@ root = Tk()
 # State Variables
 cnames = StringVar()
 newEntry = StringVar()
+updateEntry = StringVar()
 
 # Functions
 def getSelectedTable():
@@ -23,12 +24,12 @@ def removeFirstTupleElem(originalTuple):
     del newList[0]
     return tuple(newList)
     
-
+# function opens new window and passes user input to newEntry StringVar
 def newRecord(*args):
     print('New record: ')
     # child window
     child = Toplevel(c, takefocus=True)
-    child.wm_title("Add new record")
+    child.wm_title("Add new record to %s" % gTable)
     e = Entry(child, textvariable = newEntry, width=60)
     ok = ttk.Button(child, text = 'OK', command=writeNewRecord, default='active')
     
@@ -41,30 +42,30 @@ def newRecord(*args):
     # parametrizing doesn't work -> build string in python
     cursor.execute('SELECT * FROM %s WHERE ID = 1' % gTable)
     tupleString = cursor.fetchone()
-    exampleString = ' ; '.join(str(x) for x in tupleString) # in case of ints in a tuple
+    print(tupleString)
+    #listString = list(tupleString) # convert to list 
+    exampleString = ' ; '.join(str(x) for x in tupleString[1:]) # take subset without ID
     
     # save to state variable
     newEntry.set(exampleString)
-    print("%r" % exampleString)
+    print("exampleString: %r" % exampleString)
     
-    # TODO: enable saving the new tuple to string again
-    
-    
+
+# function splits the string from user and sends it to database with SQL
 def writeNewRecord():
-    # we can't use get selection 
     print('writeRecord')
     
     print("newEntry: %r" % newEntry.get())
     # build a tuple from a modified state variable string
-    myTuple = newEntry.get().split(' ; ')
-    print(myTuple)
+    newTuple = tuple(newEntry.get().split(' ; '))
+    print(newTuple)
     
     # TODO: use dictionary as switch instead of if-else chain
     # http://code.activestate.com/recipes/181064/
     
     # delete ID, the first element of a tuple
     # better - remove ID before ''.join in newRecord
-    newTuple = removeFirstTupleElem(myTuple)
+    #newTuple = removeFirstTupleElem(myTuple)
     
     # add newEntry to the database, to selected table
     if gTable == 'Magazyny':
@@ -87,7 +88,67 @@ def writeNewRecord():
     print(Query)
     cursor.execute(Query)
     
+
+def updateRecord(*args):
+    print('updateRecord: ')
+    child = Toplevel(c, takefocus=True) # child window
+    child.wm_title("Update record in %s" % gTable)
+    e = Entry(child, textvariable = updateEntry, width=60)
+    ok = ttk.Button(child, text = 'OK', command=writeUpdateRecord, default='active')
     
+    e.grid(column=1, row=1, sticky=W)
+    ok.grid(column=2, row=1, sticky=W)
+    e.focus_set()
+    
+    if not lbox.curselection():
+        print('pop-up : nie zaznaczono rekordu do modyfikacji')
+        return
+     
+    # get the selected record id       
+    selection = lbox.curselection()
+    recordString = lbox.get(selection[0])
+    print('%r' % recordString)
+    ID = recordString.split(' ; ')[-1] # ID is after ; in listbox
+    print('%r' % ID)
+    
+    cursor.execute('SELECT * FROM %s WHERE ID = %s' % (gTable, ID))
+    tupleString = cursor.fetchone()
+    updateString = ' ; '.join(str(x) for x in tupleString[1:]) # take subset without ID
+    
+    # save to state variable and add ID information
+    updateEntry.set(updateString + ' ; ' + ID)
+    print("updateString: %r" % updateString)
+    
+    
+def writeUpdateRecord(*args):
+    print('writeUpdateRecord')
+    
+    print("updateEntry: %r" % updateEntry.get())
+    # build a tuple from a modified state variable string
+    updateTuple = tuple(updateEntry.get().split(' ; '))
+    print(updateTuple)
+     
+    if gTable == 'Magazyny':
+        
+        Query = """
+        UPDATE Magazyny
+        SET miasto=%r,adres=%r, kraj=%r, telefon=%r 
+        WHERE ID = %s; """ % (updateTuple)
+        
+    elif gTable == 'Gitary':
+    
+        Query = """
+        UPDATE Gitary
+        SET producent=%r, model=%r, data=%r, cena=%r
+        WHERE ID = %s; """ % (updateTuple)
+        
+    elif gTable == 'emp':
+        pass
+        
+    print(Query)
+    cursor.execute(Query)
+  
+  
 
 def showRowsFromTable(*args):
     print('showRowsFromTable()')
@@ -111,7 +172,7 @@ def showRowsFromTable(*args):
             if not row:
                 break
             # construct a list for showing in Tk Listbox
-            dbRows.append(row.miasto + ', ' + row.adres)
+            dbRows.append(row.miasto + ', ' + row.adres + ' ; ' + str(row.ID)) # ID imported for update/delete functions
         
     elif gTable== 'Gitary':
         cursor.execute('SELECT ID, producent, model, data FROM Gitary')
@@ -119,13 +180,50 @@ def showRowsFromTable(*args):
             row = cursor.fetchone()
             if not row:
                 break
-            dbRows.append(row.producent + ' ' + row.model)
+            dbRows.append(row.producent + ' ' + row.model + ' ; ' + str(row.ID))
     
     
     
     cnames.set(dbRows)
     return dbRows
 
+    
+# Called when the selection in the listbox changes; figure out
+# which country is currently selected, and then lookup its country
+# code, and from that, its population.  Update the status message
+# with the new population.  As well, clear the message about the
+# gift being sent, so it doesn't stick around after we start doing
+# other things.
+def showPopulation(*args):
+    idxs = lbox.curselection()
+    if len(idxs)==1:
+        idx = int(idxs[0])
+        print('idx: ', idx)
+        code = countrycodes[idx]
+        name = countrynames[idx]
+        popn = populations[code]
+        statusmsg.set("The population of %s (%s) is %d" % (name, code, popn))
+    sentmsg.set('')
+
+# Called when the user double clicks an item in the listbox, presses
+# the "Send Gift" button, or presses the Return key.  In case the selected
+# item is scrolled out of view, make sure it is visible.
+#
+# Figure out which country is selected, which gift is selected with the 
+# radiobuttons, "send the gift", and provide feedback that it was sent.
+def sendGift(*args):
+    idxs = lbox.curselection()
+    if len(idxs)==1:
+        idx = int(idxs[0])
+        lbox.see(idx)
+        name = countrynames[idx]
+        # Gift sending left as an exercise to the reader
+        sentmsg.set("Sent %s to leader of %s" % (gifts[gift.get()], name))
+
+def getSearchText(*args):
+    print(searchText.get())
+    
+    
 """
 MAIN
 - maybe refactor later to
@@ -148,19 +246,7 @@ selectedTable = chooseTable[0]
 
 dbRows = []
     
-"""
-Tutaj potrzeba dodać wyświetlanie pobranych rows
 
-
-
-if selectedTable == 'Magazyny':
-    cursor.execute('SELECT magID, miasto, adres FROM Magazyny')
-    showRowsFromTable(cursor);
-elif selectedTable == 'Gitary':
-    pass
-elif selectedTable == 'emp':
-    cursor.execute('SELECT id, first_name, last_name FROM region')
-"""
     
 # ----- Tkinter part -------
 
@@ -190,39 +276,6 @@ searchText = StringVar()
 
 tablenames = StringVar(value=chooseTable)
 
-# Called when the selection in the listbox changes; figure out
-# which country is currently selected, and then lookup its country
-# code, and from that, its population.  Update the status message
-# with the new population.  As well, clear the message about the
-# gift being sent, so it doesn't stick around after we start doing
-# other things.
-def showPopulation(*args):
-    idxs = lbox.curselection()
-    if len(idxs)==1:
-        idx = int(idxs[0])
-        code = countrycodes[idx]
-        name = countrynames[idx]
-        popn = populations[code]
-        statusmsg.set("The population of %s (%s) is %d" % (name, code, popn))
-    sentmsg.set('')
-
-# Called when the user double clicks an item in the listbox, presses
-# the "Send Gift" button, or presses the Return key.  In case the selected
-# item is scrolled out of view, make sure it is visible.
-#
-# Figure out which country is selected, which gift is selected with the 
-# radiobuttons, "send the gift", and provide feedback that it was sent.
-def sendGift(*args):
-    idxs = lbox.curselection()
-    if len(idxs)==1:
-        idx = int(idxs[0])
-        lbox.see(idx)
-        name = countrynames[idx]
-        # Gift sending left as an exercise to the reader
-        sentmsg.set("Sent %s to leader of %s" % (gifts[gift.get()], name))
-
-def getSearchText(*args):
-    print(searchText.get())
         
 # Create and grid the outer content frame
 c = ttk.Frame(root, padding=(5, 5, 12, 0))
@@ -249,26 +302,29 @@ searchbar = ttk.Entry(c, textvariable = searchText)
 searchText.set("np. Gibson")
 b = ttk.Button(c, text="Szukaj", width=10, command=getSearchText)
 newButton = ttk.Button(c, text="Dodaj nowy", command=newRecord, default='active')
+updateButton = ttk.Button(c, text="Modyfikuj", command=updateRecord, default='active')
 
 # Grid all the widgets
 tablelabel.grid(column=0,row=0,pady=5)
 tablebox.grid(column=0,row=1, rowspan=5, padx=10, sticky=(N,S,E,W))
-lbox.grid(column=1, row=1, rowspan=5, sticky=(N,S,E,W))
+lbox.grid(column=1, row=1, rowspan=5, columnspan=2, sticky=(N,S,E,W)) # add a widget to column 2
 rowlabel.grid(column=1,row=0,pady=5)
-lbl.grid(column=2, row=0, padx=10, pady=5)
-g1.grid(column=2, row=1, sticky=W, padx=20)
-g2.grid(column=2, row=2, sticky=W, padx=20)
-g3.grid(column=2, row=3, sticky=W, padx=20)
-send.grid(column=2, row=4, sticky=(W,E))
-sentlbl.grid(column=2, row=5, columnspan=2, sticky=N, pady=5, padx=5)
-status.grid(column=1, row=6, columnspan=2, sticky=(W,E))
-searchLabel.grid(column=3, row=0, sticky=(N,S,E,W))
-searchbar.grid(column=3, row=1, sticky=W)
-newButton.grid(column=3, row=4, padx=5, pady=5)
+lbl.grid(column=3, row=0, padx=10, pady=5)
+g1.grid(column=3, row=1, sticky=W, padx=20)
+g2.grid(column=3, row=2, sticky=W, padx=20)
+g3.grid(column=3, row=3, sticky=W, padx=20)
+send.grid(column=3, row=6, sticky=(W,E))
+sentlbl.grid(column=3, row=5, columnspan=2, sticky=N, pady=5, padx=5)
+status.grid(column=2, row=6, columnspan=2, sticky=(W,E))
+searchLabel.grid(column=4, row=0, sticky=(N,S,E,W))
+searchbar.grid(column=4, row=1, sticky=W)
+newButton.grid(column=4, row=4, padx=5, pady=5)
+updateButton.grid(column=4, row=5, padx=5, pady=5)
 
-b.grid(column=4, row=1, sticky=W)
+b.grid(column=5, row=1, sticky=W)
 c.grid_columnconfigure(0, weight=1)
 c.grid_rowconfigure(5, weight=1)
+root.wm_title('TkBase - Zarządzaj swoją bazą danych')
 
 # Set event bindings for when the selection in the listbox changes,
 # when the user double clicks the list, and when they hit the Return key
