@@ -25,7 +25,7 @@ def removeFirstTupleElem(originalTuple):
     return tuple(newList)
     
 # function opens new window and passes user input to newEntry StringVar
-def newRecord(*args):
+def newRecord():
     print('New record: ')
     # child window
     child = Toplevel(c, takefocus=True)
@@ -89,7 +89,7 @@ def writeNewRecord():
     cursor.execute(Query)
     
 
-def updateRecord(*args):
+def updateRecord():
     print('updateRecord: ')
     child = Toplevel(c, takefocus=True) # child window
     child.wm_title("Update record in %s" % gTable)
@@ -120,7 +120,7 @@ def updateRecord(*args):
     print("updateString: %r" % updateString)
     
     
-def writeUpdateRecord(*args):
+def writeUpdateRecord():
     print('writeUpdateRecord')
     
     print("updateEntry: %r" % updateEntry.get())
@@ -148,6 +148,9 @@ def writeUpdateRecord(*args):
     print(Query)
     cursor.execute(Query)
   
+  
+def deleteRecord():
+    pass
   
 
 def showRowsFromTable(*args):
@@ -303,6 +306,7 @@ searchText.set("np. Gibson")
 b = ttk.Button(c, text="Szukaj", width=10, command=getSearchText)
 newButton = ttk.Button(c, text="Dodaj nowy", command=newRecord, default='active')
 updateButton = ttk.Button(c, text="Modyfikuj", command=updateRecord, default='active')
+deleteButton = ttk.Button(c, text="Usuń", command=deleteRecord)
 
 # Grid all the widgets
 tablelabel.grid(column=0,row=0,pady=5)
@@ -320,11 +324,11 @@ searchLabel.grid(column=4, row=0, sticky=(N,S,E,W))
 searchbar.grid(column=4, row=1, sticky=W)
 newButton.grid(column=4, row=4, padx=5, pady=5)
 updateButton.grid(column=4, row=5, padx=5, pady=5)
+deleteButton.grid(column=4, row=6, padx=5, pady=5)
 
 b.grid(column=5, row=1, sticky=W)
 c.grid_columnconfigure(0, weight=1)
 c.grid_rowconfigure(5, weight=1)
-root.wm_title('TkBase - Zarządzaj swoją bazą danych')
 
 # Set event bindings for when the selection in the listbox changes,
 # when the user double clicks the list, and when they hit the Return key
@@ -357,4 +361,5 @@ gTable = getSelectedTable()
 showPopulation()
 #showRowsFromTable()
 
+root.wm_title('TkBase - Zarządzaj swoją bazą danych')
 root.mainloop()
