@@ -29,7 +29,7 @@ def newRecord():
     print('New record: ')
     # child window
     child = Toplevel(c, takefocus=True)
-    child.wm_title("Add new record to %s" % gTable)
+    child.wm_title("Nowy wpis w tabeli %s" % gTable)
     e = Entry(child, textvariable = newEntry, width=60)
     ok = ttk.Button(child, text = 'OK', command=writeNewRecord, default='active')
     
@@ -92,7 +92,7 @@ def writeNewRecord():
 def updateRecord():
     print('updateRecord: ')
     child = Toplevel(c, takefocus=True) # child window
-    child.wm_title("Update record in %s" % gTable)
+    child.wm_title("Modyfikacja wpisu w tabeli %s" % gTable)
     e = Entry(child, textvariable = updateEntry, width=60)
     ok = ttk.Button(child, text = 'OK', command=writeUpdateRecord, default='active')
     
@@ -148,11 +148,36 @@ def writeUpdateRecord():
     print(Query)
     cursor.execute(Query)
   
-  
+# this function only shows warning, no editing possible
 def deleteRecord():
-    pass
-  
+    print('deleteRecord: ')
+    popup = Toplevel(c, takefocus=True) # child window
+    popup.wm_title("Usuwanie wpisu z tabeli %s" % gTable)
+    popLabel = ttk.Label(popup, text="Czy na pewno chcesz usunąć ten wpis?")
+    yesButton = ttk.Button(popup, text="Tak", command=writeDeleteRecord)
+    noButton = ttk.Button(popup, text="Nie", command=lambda: closePopup(popup), default='active')
+    
+    popLabel.grid(column=0, row=0, padx=5, pady=5, columnspan=2)
+    yesButton.grid(column=0, row=1)
+    noButton.grid(column=1, row=1)
 
+    if not lbox.curselection():
+        print('pop-up : nie zaznaczono rekordu do modyfikacji')
+        return
+     
+    # get the selected record id       
+    selection = lbox.curselection()
+    recordString = lbox.get(selection[0])
+    print('%r' % recordString)
+    ID = recordString.split(' ; ')[-1] # ID is after ; in listbox
+    print('%r' % ID)
+  
+def writeDeleteRecord():
+    pass
+    
+def closePopup(popup):
+    popup.destroy()
+  
 def showRowsFromTable(*args):
     print('showRowsFromTable()')
     dbRows = [] # istnieje tylko wewnatrz funkcji
@@ -306,7 +331,7 @@ searchText.set("np. Gibson")
 b = ttk.Button(c, text="Szukaj", width=10, command=getSearchText)
 newButton = ttk.Button(c, text="Dodaj nowy", command=newRecord, default='active')
 updateButton = ttk.Button(c, text="Modyfikuj", command=updateRecord, default='active')
-deleteButton = ttk.Button(c, text="Usuń", command=deleteRecord)
+deleteButton = ttk.Button(c, text="Usuń", command=deleteRecord, default='active')
 
 # Grid all the widgets
 tablelabel.grid(column=0,row=0,pady=5)
