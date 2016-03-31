@@ -7,6 +7,8 @@ root = Tk()
 cnames = StringVar()
 newEntry = StringVar()
 updateEntry = StringVar()
+deleteEntry = StringVar()
+Mode = StringVar() # user, admin or developer mode
 
 # Functions
 def getSelectedTable():
@@ -154,7 +156,7 @@ def deleteRecord():
     popup = Toplevel(c, takefocus=True) # child window
     popup.wm_title("Usuwanie wpisu z tabeli %s" % gTable)
     popLabel = ttk.Label(popup, text="Czy na pewno chcesz usunąć ten wpis?")
-    yesButton = ttk.Button(popup, text="Tak", command=writeDeleteRecord)
+    yesButton = ttk.Button(popup, text="Tak", command=lambda: writeDeleteRecord(ID))
     noButton = ttk.Button(popup, text="Nie", command=lambda: closePopup(popup), default='active')
     
     popLabel.grid(column=0, row=0, padx=5, pady=5, columnspan=2)
@@ -171,9 +173,20 @@ def deleteRecord():
     print('%r' % recordString)
     ID = recordString.split(' ; ')[-1] # ID is after ; in listbox
     print('%r' % ID)
+    
+    deleteID.set(updateString + ' ; ' + ID)
+    print("updateString: %r" % updateString)
   
-def writeDeleteRecord():
-    pass
+def writeDeleteRecord(ID):
+    print("deleteEntry")
+        
+    Query = """
+    DELETE FROM %s
+    WHERE ID = %s; """ % (gTable, ID)
+        
+    print(Query)
+    cursor.execute(Query)
+    
     
 def closePopup(popup):
     popup.destroy()
@@ -181,13 +194,13 @@ def closePopup(popup):
 def switchAdminMode(newMode):
     print('switchAdminMode()')
     
-    if newMode == Mode
+    if newMode == Mode:
         pass
-    elif newMode == 'devel'
+    elif newMode == 'devel':
         pass
-    elif newMode == 'admin'
+    elif newMode == 'admin':
         pass
-    elif newMode == 'user'
+    elif newMode == 'user':
         print('> user mode')
         
   
@@ -214,7 +227,7 @@ def showRowsFromTable(*args):
             # construct a list for showing in Tk Listbox
             dbRows.append(row.miasto + ', ' + row.adres + ' ; ' + str(row.ID)) # ID imported for update/delete functions
         
-    elif gTable== 'Gitary':
+    elif gTable == 'Gitary':
         cursor.execute('SELECT ID, producent, model, data FROM Gitary')
         while 1:
             row = cursor.fetchone()
@@ -310,27 +323,34 @@ tablelabel = ttk.Label(c, text='Tabele')
 tablebox = Listbox(c, listvariable=tablenames)
 rowlabel = ttk.Label(c, text='Wyniki')
 lbox = Listbox(c, listvariable=cnames, height=5)
-searchLabel = ttk.Label(c, text='Wyszukaj w tablicy')
+searchLabel = ttk.Label(c, text='Wyszukiwanie w tablicy')
 searchbar = ttk.Entry(c, textvariable = searchText)
 searchText.set("np. Gibson")
 b = ttk.Button(c, text="Szukaj", width=10, command=getSearchText)
+modificationsLabel = ttk.Label(c, text='Modyfikacje tablicy')
 newButton = ttk.Button(c, text="Dodaj nowy", command=newRecord, default='active')
 updateButton = ttk.Button(c, text="Modyfikuj", command=updateRecord, default='active')
 deleteButton = ttk.Button(c, text="Usuń", command=deleteRecord, default='active')
-adminButton = ttk.Button(c, text="Tryb administratora", command=switchAdminMode, default='active')
+#modeLabel = ttk.Label(c, text="Wybór trybu")
+userButton = ttk.Button(c, text="Tryb użytkownika", command=lambda: switchAdminMode('user'), default='active')
+adminButton = ttk.Button(c, text="Tryb administratora", command=lambda: switchAdminMode('admin'), default='active')
+develButton = ttk.Button(c, text="Tryb developera", command=lambda: switchAdminMode('devel'), default='active')
 
 # Grid all the widgets
-tablelabel.grid(column=0,row=0,pady=5)
-tablebox.grid(column=0,row=1, rowspan=6, padx=10, sticky=(N,S,E,W))
+tablelabel.grid(column=0,row=0, padx=5, pady=5, sticky=(N,S,E,W))
+tablebox.grid(column=0,row=1, rowspan=6, padx=5, sticky=(N,S,E,W))
 lbox.grid(column=1, row=1, rowspan=6, columnspan=4, sticky=(N,S,E,W)) # add a widget to column 2
 rowlabel.grid(column=1,row=0,pady=5)
 searchLabel.grid(column=6, row=0, sticky=(N,S,E,W))
 searchbar.grid(column=6, row=1, sticky=W)
-newButton.grid(column=6, row=4, padx=5, pady=5)
-updateButton.grid(column=6, row=5, padx=5, pady=5)
-deleteButton.grid(column=6, row=6, padx=5, pady=5)
-adminButton.grid(column=2, row=7)
-
+modificationsLabel.grid(column=6, row=3, pady=5, sticky=(N,S,E,W))
+newButton.grid(column=6, row=4, padx=5, pady=0)
+updateButton.grid(column=6, row=5, padx=5, pady=0)
+deleteButton.grid(column=6, row=6, padx=5, pady=0)
+#modeLabel.grid(column=0, row=8, pady=5)
+userButton.grid(column=1, row=8)
+adminButton.grid(column=2, row=8)
+develButton.grid(column=3, row=8)
 
 lbox
 b.grid(column=5, row=1, sticky=W)
