@@ -1,5 +1,7 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter import messagebox
+
 import pyodbc
 root = Tk()
 
@@ -81,7 +83,7 @@ def writeNewRecord():
         INSERT INTO Gitary (producent, model, data, cena)
                 VALUES(%r, %r, %r, %r) """ % (newTuple)
     
-    elif gTable == 'emp': # add Inventory table
+    elif gTable == 'StanMagazynowy':
         pass
         
     else:
@@ -104,6 +106,10 @@ def updateRecord():
     
     if not lbox.curselection():
         print('pop-up : nie zaznaczono rekordu do modyfikacji')
+        messagebox.showwarning(
+            "Modyfikacja rekordu",
+            "Nie zaznaczono rekordu do modyfikacji"
+        )
         return
      
     # get the selected record id       
@@ -144,7 +150,7 @@ def writeUpdateRecord():
         SET producent=%r, model=%r, data=%r, cena=%r
         WHERE ID = %s; """ % (updateTuple)
         
-    elif gTable == 'emp':
+    elif gTable == 'StanMagazynowy':
         pass
         
     print(Query)
@@ -165,6 +171,10 @@ def deleteRecord():
 
     if not lbox.curselection():
         print('pop-up : nie zaznaczono rekordu do modyfikacji')
+        messagebox.showwarning(
+            "Usuwanie rekordu",
+            "Nie zaznaczono rekordu do usunięcia"
+        )
         return
      
     # get the selected record id       
@@ -235,48 +245,24 @@ def showRowsFromTable(*args):
                 break
             dbRows.append(row.producent + ' ' + row.model + ' ; ' + str(row.ID))
     
-    
+    elif gTable == 'StanMagazynowy':
+        print('showRows - StanMagazynowy')
+        cursor.execute('SELECT ID, IDproduktu, IDmagazynu, ilosc FROM StanMagazynowy')
+        # JOIN
+        while 1:
+            row = cursor.fetchone()
+            if not row:
+                break
+            dbRows.append(row.IDproduktu + ' ' + row.IDmagazynu + ' ; ' + str(row.ID))
     
     cnames.set(dbRows)
     return dbRows
 
-    
-# Called when the selection in the listbox changes; figure out
-# which country is currently selected, and then lookup its country
-# code, and from that, its population.  Update the status message
-# with the new population.  As well, clear the message about the
-# gift being sent, so it doesn't stick around after we start doing
-# other things.
-def showPopulation(*args):
-    idxs = lbox.curselection()
-    if len(idxs)==1:
-        idx = int(idxs[0])
-        print('idx: ', idx)
-        code = countrycodes[idx]
-        name = countrynames[idx]
-        popn = populations[code]
-        statusmsg.set("The population of %s (%s) is %d" % (name, code, popn))
-    sentmsg.set('')
 
-def showRowInfo():
+def showRowInfo(*args):
     print('showRowInfo')
     # here put info about current record
     
-# Called when the user double clicks an item in the listbox, presses
-# the "Send Gift" button, or presses the Return key.  In case the selected
-# item is scrolled out of view, make sure it is visible.
-#
-# Figure out which country is selected, which gift is selected with the 
-# radiobuttons, "send the gift", and provide feedback that it was sent.
-def sendGift(*args):
-    idxs = lbox.curselection()
-    if len(idxs)==1:
-        idx = int(idxs[0])
-        lbox.see(idx)
-        name = countrynames[idx]
-        # Gift sending left as an exercise to the reader
-        sentmsg.set("Sent %s to leader of %s" % (gifts[gift.get()], name))
-
 def getSearchText(*args):
     print(searchText.get())
     
@@ -298,7 +284,7 @@ con.autocommit = True
 cursor = con.cursor()
 
 # Select some data
-chooseTable = ['Magazyny', 'Gitary', 'emp']
+chooseTable = ['Magazyny', 'Gitary', 'StanMagazynowy']
 selectedTable = chooseTable[0]
 
 dbRows = []
