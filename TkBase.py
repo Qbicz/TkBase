@@ -64,6 +64,12 @@ def writeNewRecord():
     newTuple = tuple(newEntry.get().split(' ; '))
     print(newTuple)
     
+    # Validation
+    elements = len(newTuple)
+    if elements != validElements[gTable]:
+        messagebox.showwarning("Walidacja negatywna", "Poprawnie uzupełnij tabelę")
+        return
+    
     # TODO: use dictionary as switch instead of if-else chain
     # http://code.activestate.com/recipes/181064/
     
@@ -135,6 +141,13 @@ def writeUpdateRecord():
     # build a tuple from a modified state variable string
     updateTuple = tuple(updateEntry.get().split(' ; '))
     print(updateTuple)
+    
+    # Validation
+    elements = len(updateTuple)
+    if elements != validElements[gTable]:
+        messagebox.showwarning("Walidacja negatywna", "Poprawnie uzupełnij tabelę")
+        return
+        
      
     if gTable == 'Magazyny':
         
@@ -358,6 +371,8 @@ lbox.selection_set(0)
 tablebox.selection_set(0)
 # global var gTable
 gTable = getSelectedTable()
+# valid number of elements for each table
+validElements = {'Magazyny': 4, 'Gitary': 4, 'StanMagazynowy': 5}
 
 #searchbar.insert('1.0', 'np. Gibson')
 
