@@ -35,7 +35,7 @@ def newRecord():
     child = Toplevel(c, takefocus=True)
     child.wm_title("Nowy wpis w tabeli %s" % gTable)
     e = Entry(child, textvariable = newEntry, width=60)
-    ok = ttk.Button(child, text = 'OK', command=writeNewRecord, default='active')
+    ok = ttk.Button(child, text = 'OK', command=lambda: writeNewRecord(child), default='active')
     
     e.grid(column=1, row=1, sticky=W)
     ok.grid(column=2, row=1, sticky=W)
@@ -54,9 +54,10 @@ def newRecord():
     newEntry.set(exampleString)
     print("exampleString: %r" % exampleString)
     
+    
 
 # function splits the string from user and sends it to database with SQL
-def writeNewRecord():
+def writeNewRecord(toplevel):
     print('writeRecord')
     
     print("newEntry: %r" % newEntry.get())
@@ -68,6 +69,7 @@ def writeNewRecord():
     elements = len(newTuple)
     if elements != validElements[gTable]:
         messagebox.showwarning("Walidacja negatywna", "Poprawnie uzupełnij tabelę")
+        toplevel.destroy()
         return
     
     # TODO: use dictionary as switch instead of if-else chain
@@ -97,6 +99,7 @@ def writeNewRecord():
     
     print(Query)
     cursor.execute(Query)
+    toplevel.destroy()
     
 
 def updateRecord():
@@ -220,9 +223,9 @@ def switchAdminMode(newMode):
     if newMode == Mode:
         pass
     elif newMode == 'devel':
-        pass
+        print('> devel mode')
     elif newMode == 'admin':
-        pass
+        print('> admin mode')
     elif newMode == 'user':
         print('> user mode')
         
