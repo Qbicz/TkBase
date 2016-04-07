@@ -15,7 +15,11 @@ Mode = StringVar() # user, admin or developer mode
 # Functions
 def getSelectedTable():
     selection = tablebox.curselection()
-    return tablebox.get(selection[0])
+    try:
+        return tablebox.get(selection[0])
+    except IndexError:
+        print('Tabela nie jest zaznaczona, wyswietlam stara.')
+        return gTable
     
     
 def updateSelectedTable():
@@ -34,7 +38,7 @@ def newRecord():
     # child window
     child = Toplevel(c, takefocus=True)
     child.wm_title("Nowy wpis w tabeli %s" % gTable)
-    e = Entry(child, textvariable = newEntry, width=60)
+    e = Entry(child, textvariable = newEntry, width=70)
     ok = ttk.Button(child, text = 'OK', command=lambda: writeNewRecord(child), default='active')
     
     e.grid(column=1, row=1, sticky=W)
@@ -100,14 +104,15 @@ def writeNewRecord(toplevel):
     print(Query)
     cursor.execute(Query)
     toplevel.destroy()
+    showRowsFromTable()
     
 
 def updateRecord():
     print('updateRecord: ')
     child = Toplevel(c, takefocus=True) # child window
     child.wm_title("Modyfikacja wpisu w tabeli %s" % gTable)
-    e = Entry(child, textvariable = updateEntry, width=60)
-    ok = ttk.Button(child, text = 'OK', command=writeUpdateRecord, default='active')
+    e = Entry(child, textvariable = updateEntry, width=70)
+    ok = ttk.Button(child, text = 'OK', command=lambda: writeUpdateRecord(child), default='active') # refactor to class with self.updateWindow
     
     e.grid(column=1, row=1, sticky=W)
     ok.grid(column=2, row=1, sticky=W)
@@ -119,6 +124,7 @@ def updateRecord():
             "Modyfikacja rekordu",
             "Nie zaznaczono rekordu do modyfikacji"
         )
+        child.destroy()
         return
      
     # get the selected record id       
@@ -137,7 +143,7 @@ def updateRecord():
     print("updateString: %r" % updateString)
     
     
-def writeUpdateRecord():
+def writeUpdateRecord(toplevel):
     print('writeUpdateRecord')
     
     print("updateEntry: %r" % updateEntry.get())
@@ -171,6 +177,9 @@ def writeUpdateRecord():
         
     print(Query)
     cursor.execute(Query)
+    toplevel.destroy()
+    showRowsFromTable()
+    
   
 # this function only shows warning, no editing possible
 def deleteRecord():
@@ -212,6 +221,7 @@ def writeDeleteRecord(ID):
         
     print(Query)
     cursor.execute(Query)
+    showRowsFromTable()
     
     
 def closePopup(popup):
@@ -375,7 +385,7 @@ tablebox.selection_set(0)
 # global var gTable
 gTable = getSelectedTable()
 # valid number of elements for each table
-validElements = {'Magazyny': 4, 'Gitary': 4, 'StanMagazynowy': 5}
+validElements = {'Magazyny': 5, 'Gitary': 5, 'StanMagazynowy': 6}
 
 #searchbar.insert('1.0', 'np. Gibson')
 
