@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
+import logging
 
 import pyodbc
 root = Tk()
@@ -18,7 +19,7 @@ def getSelectedTable():
     try:
         return tablebox.get(selection[0])
     except IndexError:
-        print('Tabela nie jest zaznaczona, wyswietlam stara.')
+        logging.info('Tabela nie jest zaznaczona, wyswietlam stara.')
         return gTable
     
     
@@ -34,7 +35,7 @@ def removeFirstTupleElem(originalTuple):
     
 # function opens new window and passes user input to newEntry StringVar
 def newRecord():
-    print('New record: ')
+    logging.info('New record: ')
     # child window
     child = Toplevel(c, takefocus=True)
     child.wm_title("Nowy wpis w tabeli %s" % gTable)
@@ -46,28 +47,28 @@ def newRecord():
     e.focus_set()
     
     # Show tables' columns default text
-    print('selected table:%r' % gTable)
+    logging.debug('selected table:%r' % gTable)
     # parametrizing doesn't work -> build string in python
     cursor.execute('SELECT * FROM %s WHERE ID = 1' % gTable)
     tupleString = cursor.fetchone()
-    print(tupleString)
+    logging.debug(tupleString)
     #listString = list(tupleString) # convert to list 
     exampleString = ' ; '.join(str(x) for x in tupleString[1:]) # take subset without ID
     
     # save to state variable
     newEntry.set(exampleString)
-    print("exampleString: %r" % exampleString)
+    logging.debug("exampleString: %r" % exampleString)
     
     
 
 # function splits the string from user and sends it to database with SQL
 def writeNewRecord(toplevel):
-    print('writeRecord')
+    logging.info('writeRecord')
     
-    print("newEntry: %r" % newEntry.get())
+    logging.debug("newEntry: %r" % newEntry.get())
     # build a tuple from a modified state variable string
     newTuple = tuple(newEntry.get().split(' ; '))
-    print(newTuple)
+    logging.debug(newTuple)
     
     # Validation
     elements = len(newTuple)
@@ -99,16 +100,16 @@ def writeNewRecord(toplevel):
         pass
         
     else:
-        print('TODO: Raise an exception here?')
+        logging.error('TODO: Raise an exception here?')
     
-    print(Query)
+    logging.debug(Query)
     cursor.execute(Query)
     toplevel.destroy()
     showRowsFromTable()
     
 
 def updateRecord():
-    print('updateRecord: ')
+    logging.info('updateRecord: ')
     child = Toplevel(c, takefocus=True) # child window
     child.wm_title("Modyfikacja wpisu w tabeli %s" % gTable)
     e = Entry(child, textvariable = updateEntry, width=70)
@@ -119,7 +120,7 @@ def updateRecord():
     e.focus_set()
     
     if not lbox.curselection():
-        print('pop-up : nie zaznaczono rekordu do modyfikacji')
+        logging.warning('pop-up : nie zaznaczono rekordu do modyfikacji')
         messagebox.showwarning(
             "Modyfikacja rekordu",
             "Nie zaznaczono rekordu do modyfikacji"
@@ -130,9 +131,9 @@ def updateRecord():
     # get the selected record id       
     selection = lbox.curselection()
     recordString = lbox.get(selection[0])
-    print('%r' % recordString)
+    logging.debug('%r' % recordString)
     ID = recordString.split(' ; ')[-1] # ID is after ; in listbox
-    print('%r' % ID)
+    logging.debug('%r' % ID)
     
     cursor.execute('SELECT * FROM %s WHERE ID = %s' % (gTable, ID))
     tupleString = cursor.fetchone()
@@ -140,16 +141,16 @@ def updateRecord():
     
     # save to state variable and add ID information
     updateEntry.set(updateString + ' ; ' + ID)
-    print("updateString: %r" % updateString)
+    logging.debug("updateString: %r" % updateString)
     
     
 def writeUpdateRecord(toplevel):
-    print('writeUpdateRecord')
+    logging.info('writeUpdateRecord')
     
-    print("updateEntry: %r" % updateEntry.get())
+    logging.debug("updateEntry: %r" % updateEntry.get())
     # build a tuple from a modified state variable string
     updateTuple = tuple(updateEntry.get().split(' ; '))
-    print(updateTuple)
+    logging.debug(updateTuple)
     
     # Validation
     elements = len(updateTuple)
@@ -175,7 +176,7 @@ def writeUpdateRecord(toplevel):
     elif gTable == 'StanMagazynowy':
         pass
         
-    print(Query)
+    logging.debug(Query)
     cursor.execute(Query)
     toplevel.destroy()
     showRowsFromTable()
@@ -183,7 +184,7 @@ def writeUpdateRecord(toplevel):
   
 # this function only shows warning, no editing possible
 def deleteRecord():
-    print('deleteRecord: ')
+    logging.info('deleteRecord: ')
     popup = Toplevel(c, takefocus=True) # child window
     popup.wm_title("Usuwanie wpisu z tabeli %s" % gTable)
     popLabel = ttk.Label(popup, text="Czy na pewno chcesz usunąć ten wpis?")
@@ -195,7 +196,7 @@ def deleteRecord():
     noButton.grid(column=1, row=1)
 
     if not lbox.curselection():
-        print('pop-up : nie zaznaczono rekordu do modyfikacji')
+        logging.warning('pop-up : nie zaznaczono rekordu do modyfikacji')
         messagebox.showwarning(
             "Usuwanie rekordu",
             "Nie zaznaczono rekordu do usunięcia"
@@ -205,21 +206,21 @@ def deleteRecord():
     # get the selected record id       
     selection = lbox.curselection()
     recordString = lbox.get(selection[0])
-    print('%r' % recordString)
+    logging.debug('%r' % recordString)
     ID = recordString.split(' ; ')[-1] # ID is after ; in listbox
-    print('%r' % ID)
+    logging.debug('%r' % ID)
     
     deleteID.set(updateString + ' ; ' + ID)
-    print("updateString: %r" % updateString)
+    logging.debug("updateString: %r" % updateString)
   
 def writeDeleteRecord(ID):
-    print("deleteEntry")
+    logging.info("deleteEntry")
         
     Query = """
     DELETE FROM %s
     WHERE ID = %s; """ % (gTable, ID)
         
-    print(Query)
+    logging.debug(Query)
     cursor.execute(Query)
     showRowsFromTable()
     
@@ -228,7 +229,7 @@ def closePopup(popup):
     popup.destroy()
   
 def switchAdminMode(newMode):
-    print('switchAdminMode()')
+    logging.info('switchAdminMode()')
     
     if newMode == Mode:
         pass
@@ -241,7 +242,7 @@ def switchAdminMode(newMode):
         
   
 def showRowsFromTable(*args):
-    print('showRowsFromTable()')
+    logging.info('showRowsFromTable()')
     dbRows = [] # istnieje tylko wewnatrz funkcji
     updateSelectedTable()
     
@@ -272,7 +273,7 @@ def showRowsFromTable(*args):
             dbRows.append(row.producent + ' ' + row.model + ' ; ' + str(row.ID))
     
     elif gTable == 'StanMagazynowy':
-        print('showRows - StanMagazynowy')
+        logging.info('showRows - StanMagazynowy')
         cursor.execute('SELECT ID, IDproduktu, IDmagazynu, ilosc FROM StanMagazynowy')
         # JOIN
         while 1:
@@ -286,11 +287,11 @@ def showRowsFromTable(*args):
 
 
 def showRowInfo(*args):
-    print('showRowInfo')
+    logging.info('showRowInfo')
     # here put info about current record
     
 def getSearchText(*args):
-    print(searchText.get())
+    logging.info(searchText.get())
     
     
 """
@@ -300,6 +301,10 @@ MAIN
 if __name__ == "__main__":
     main()
 """    
+
+# Log to file
+logging.basicConfig(level=logging.DEBUG) # filename='myapp.log', 
+logging.info('Logging started in %s' % __file__)
 
 # Connect to the SqlLocalDb
 con = pyodbc.connect('Driver={SQL Server Native Client 11.0};Server=(localdb)\\MyInstance;Database=fkubicz;integrated security = true')
