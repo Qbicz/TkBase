@@ -1,3 +1,11 @@
+"""
+TkBase.py
+
+Tkinter application for SQL Server database operation
+
+Filip Kubicz (2016)
+""" 
+
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
@@ -19,7 +27,7 @@ def getSelectedTable():
     try:
         return tablebox.get(selection[0])
     except IndexError:
-        logging.info('Tabela nie jest zaznaczona, wyswietlam stara.')
+        logging.info('Table not chosen, showing the old one.')
         return gTable
     
     
@@ -33,8 +41,8 @@ def removeFirstTupleElem(originalTuple):
     del newList[0]
     return tuple(newList)
     
-# function opens new window and passes user input to newEntry StringVar
 def newRecord():
+    """function opens new window and passes user input to newEntry StringVar"""
     logging.info('New record: ')
     # child window
     child = Toplevel(c, takefocus=True)
@@ -60,9 +68,8 @@ def newRecord():
     logging.debug("exampleString: %r" % exampleString)
     
     
-
-# function splits the string from user and sends it to database with SQL
 def writeNewRecord(toplevel):
+    """function splits the string from user and sends it to database with SQL"""
     logging.info('writeRecord')
     
     logging.debug("newEntry: %r" % newEntry.get())
@@ -72,7 +79,8 @@ def writeNewRecord(toplevel):
     
     # Validation
     elements = len(newTuple)
-    if elements != validElements[gTable]:
+    if elements != validElements[gTable] - 1: # -1 because new record does not have ID yet
+        logging.warning("elements = ", elements, "validElements = ", validElements[gTable])
         messagebox.showwarning("Walidacja negatywna", "Poprawnie uzupełnij tabelę")
         toplevel.destroy()
         return
@@ -182,13 +190,13 @@ def writeUpdateRecord(toplevel):
     showRowsFromTable()
     
   
-# this function only shows warning, no editing possible
 def deleteRecord():
+    """this function only shows warning, no record editing possible"""
     logging.info('deleteRecord: ')
     popup = Toplevel(c, takefocus=True) # child window
     popup.wm_title("Usuwanie wpisu z tabeli %s" % gTable)
     popLabel = ttk.Label(popup, text="Czy na pewno chcesz usunąć ten wpis?")
-    yesButton = ttk.Button(popup, text="Tak", command=lambda: writeDeleteRecord(ID))
+    yesButton = ttk.Button(popup, text="Tak", command=lambda: writeDeleteRecord(ID, popup))
     noButton = ttk.Button(popup, text="Nie", command=lambda: closePopup(popup), default='active')
     
     popLabel.grid(column=0, row=0, padx=5, pady=5, columnspan=2)
@@ -213,7 +221,7 @@ def deleteRecord():
     deleteID.set(updateString + ' ; ' + ID)
     logging.debug("updateString: %r" % updateString)
   
-def writeDeleteRecord(ID):
+def writeDeleteRecord(ID, toplevel):
     logging.info("deleteEntry")
         
     Query = """
@@ -222,6 +230,7 @@ def writeDeleteRecord(ID):
         
     logging.debug(Query)
     cursor.execute(Query)
+    toplevel.destroy()
     showRowsFromTable()
     
     
@@ -274,13 +283,25 @@ def showRowsFromTable(*args):
     
     elif gTable == 'StanMagazynowy':
         logging.info('showRows - StanMagazynowy')
-        cursor.execute('SELECT ID, IDproduktu, IDmagazynu, ilosc FROM StanMagazynowy')
+        # cursor.execute('SELECT ID, IDproduktu, IDmagazynu, ilosc FROM StanMagazynowy')
+        SqlStatement = """
+        SELECT CONCAT(
+            'Mamy ', ilosc, ' sztuk ', G.producent, ' ', G.model, ' w magazynie ', Mag.miasto)
+            FROM StanMagazynowy
+            JOIN Gitary G
+            ON StanMagazynowy.IDproduktu = G.ID
+            JOIN Magazyny Mag
+            ON StanMagazynowy.IDmagazynu = Mag.ID
+            ORDER BY Mag.miasto
+        """
+        cursor.execute(SqlStatement)
         # JOIN
         while 1:
             row = cursor.fetchone()
             if not row:
                 break
-            dbRows.append(row.IDproduktu + ' ' + row.IDmagazynu + ' ; ' + str(row.ID))
+            dbRows.append(row)
+            #dbRows.append(row.IDproduktu + ' ' + row.IDmagazynu + ' ; ' + str(row.ID))
     
     cnames.set(dbRows)
     return dbRows
@@ -369,7 +390,6 @@ userButton.grid(column=1, row=8)
 adminButton.grid(column=2, row=8)
 develButton.grid(column=3, row=8)
 
-lbox
 b.grid(column=5, row=1, sticky=W)
 c.grid_columnconfigure(0, weight=1)
 c.grid_rowconfigure(5, weight=1)
