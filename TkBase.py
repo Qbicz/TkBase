@@ -249,18 +249,23 @@ def switchAdminMode(newMode):
         newButton.config(state='active')
         updateButton.config(state='active')
         deleteButton.config(state='active')
+        runSqlButton.config(state='active')
     elif newMode == 'admin':
         logging.info('> admin mode')
         newButton.config(state='active')
         updateButton.config(state='active')
         deleteButton.config(state='active')
+        runSqlButton.config(state='disabled')
     elif newMode == 'user':
         logging.info('> user mode')
         newButton.config(state='disabled')
         updateButton.config(state='disabled')
         deleteButton.config(state='disabled')
+        runSqlButton.config(state='disabled')
         
-  
+def runBareSql():
+    pass
+        
 def showRowsFromTable(*args):
     logging.info('showRowsFromTable()')
     dbRows = [] # istnieje tylko wewnatrz funkcji
@@ -378,9 +383,10 @@ searchbar = ttk.Entry(c, textvariable = searchText)
 searchText.set("np. Gibson")
 b = ttk.Button(c, text="Szukaj", width=10, command=getSearchText)
 modificationsLabel = ttk.Label(c, text='Modyfikacje tablicy')
-newButton = ttk.Button(c, text="Dodaj nowy", command=newRecord, default='active')
-updateButton = ttk.Button(c, text="Modyfikuj", command=updateRecord, default='active')
-deleteButton = ttk.Button(c, text="Usuń", command=deleteRecord, default='active')
+newButton = ttk.Button(c, text="Dodaj nowy", command=newRecord, default='disabled')
+updateButton = ttk.Button(c, text="Modyfikuj", command=updateRecord, default='disabled')
+deleteButton = ttk.Button(c, text="Usuń", command=deleteRecord, default='disabled')
+runSqlButton = ttk.Button(c, text="Wykonaj SQL", command=runBareSql, default='disabled')
 #modeLabel = ttk.Label(c, text="Wybór trybu")
 userButton = ttk.Button(c, text="Tryb użytkownika", command=lambda: switchAdminMode('user'), default='active')
 adminButton = ttk.Button(c, text="Tryb administratora", command=lambda: switchAdminMode('admin'), default='active')
@@ -397,6 +403,7 @@ modificationsLabel.grid(column=6, row=3, pady=5, sticky=(N,S,E,W))
 newButton.grid(column=6, row=4, padx=5, pady=0)
 updateButton.grid(column=6, row=5, padx=5, pady=0)
 deleteButton.grid(column=6, row=6, padx=5, pady=0)
+runSqlButton.grid(column=6, row=7, padx=5, pady=0)
 #modeLabel.grid(column=0, row=8, pady=5)
 userButton.grid(column=1, row=8)
 adminButton.grid(column=2, row=8)
