@@ -105,7 +105,9 @@ def writeNewRecord(toplevel):
                 VALUES(%r, %r, %r, %r) """ % (newTuple)
     
     elif gTable == 'StanMagazynowy':
-        pass
+        Query = """
+        INSERT INTO StanMagazynowy (ID, IDproduktu, IDmagazynu, ilosc, min, max)
+                VALUES(3, %r, %r, %r, %r, %r) """ % (newTuple)
         
     else:
         logging.error('TODO: Raise an exception here?')
@@ -243,11 +245,20 @@ def switchAdminMode(newMode):
     if newMode == Mode:
         pass
     elif newMode == 'devel':
-        print('> devel mode')
+        logging.info('> devel mode')
+        newButton.config(state='active')
+        updateButton.config(state='active')
+        deleteButton.config(state='active')
     elif newMode == 'admin':
-        print('> admin mode')
+        logging.info('> admin mode')
+        newButton.config(state='active')
+        updateButton.config(state='active')
+        deleteButton.config(state='active')
     elif newMode == 'user':
-        print('> user mode')
+        logging.info('> user mode')
+        newButton.config(state='disabled')
+        updateButton.config(state='disabled')
+        deleteButton.config(state='disabled')
         
   
 def showRowsFromTable(*args):
@@ -285,8 +296,9 @@ def showRowsFromTable(*args):
         logging.info('showRows - StanMagazynowy')
         # cursor.execute('SELECT ID, IDproduktu, IDmagazynu, ilosc FROM StanMagazynowy')
         SqlStatement = """
-        SELECT CONCAT(
-            'Mamy ', ilosc, ' sztuk ', G.producent, ' ', G.model, ' w magazynie ', Mag.miasto)
+        SELECT
+            ilosc, G.producent as prod,
+            G.model as model, Mag.miasto as miasto
             FROM StanMagazynowy
             JOIN Gitary G
             ON StanMagazynowy.IDproduktu = G.ID
@@ -300,7 +312,7 @@ def showRowsFromTable(*args):
             row = cursor.fetchone()
             if not row:
                 break
-            dbRows.append(row)
+            dbRows.append('Mamy '+str(row.ilosc)+' sztuk '+row.prod+' '+row.model+' w magazynie '+row.miasto)
             #dbRows.append(row.IDproduktu + ' ' + row.IDmagazynu + ' ; ' + str(row.ID))
     
     cnames.set(dbRows)
@@ -418,6 +430,7 @@ validElements = {'Magazyny': 5, 'Gitary': 5, 'StanMagazynowy': 6}
 #searchText = searchbar.get('1.0', 'end')
 
 showRowsFromTable()
+switchAdminMode('user')
 
 root.wm_title('TkBase - Zarządzaj swoją bazą danych')
 root.mainloop()
