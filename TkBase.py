@@ -19,6 +19,7 @@ cnames = StringVar()
 newEntry = StringVar()
 updateEntry = StringVar()
 deleteEntry = StringVar()
+sqlCommand = StringVar()
 Mode = StringVar() # user, admin or developer mode
 
 # Functions
@@ -264,8 +265,25 @@ def switchAdminMode(newMode):
         runSqlButton.config(state='disabled')
         
 def runBareSql():
-    pass
-        
+    """Function which executes SQL entered in developer mode"""
+    logging.info('runBareSql: ')
+    child = Toplevel(c, takefocus=True) # child window
+    child.wm_title("Wykonaj zapytanie SQL")
+    e = Entry(child, textvariable = sqlCommand, width=70)
+    ok = ttk.Button(child, text = 'OK', command=lambda: runBareSqlWrite(sqlCommand, child), default='active')
+    
+    e.grid(column=1, row=1, sticky=W)
+    ok.grid(column=2, row=1, sticky=W)
+    e.focus_set()
+    
+    # save to state variable
+    newEntry.set(exampleString)
+    
+
+def runBareSqlWrite(sqlCommand, child):
+    cursor.execute(sqlCommand.get())
+    child.destroy()
+    
 def showRowsFromTable(*args):
     logging.info('showRowsFromTable()')
     dbRows = [] # istnieje tylko wewnatrz funkcji
